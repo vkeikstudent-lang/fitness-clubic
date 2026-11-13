@@ -1,0 +1,503 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль учета фитнес-клуба</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --danger: #f43f5e;
+            --warning: #fbbf24;
+            --success: #34d399;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .stat .num {
+            font-size: 2.4rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .stat .label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        .stat.total .num { color: var(--accent); }
+        .stat.in-gym .num { color: var(--success); }
+        .stat.absent .num { color: var(--warning); }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        input, select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-presence {
+            background-color: transparent;
+            color: var(--success);
+            border: 1px solid var(--success);
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn-presence:hover {
+            background-color: var(--success);
+            color: #0f172a;
+        }
+
+        .btn-presence.leave {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .btn-presence.leave:hover {
+            background-color: var(--warning);
+            color: #0f172a;
+        }
+
+        .btn-presence:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            background-color: transparent;
+            color: var(--text-muted);
+            border-color: var(--text-muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-row {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid currentColor;
+            white-space: nowrap;
+        }
+
+        .badge.active { color: var(--success); }
+        .badge.soon { color: var(--warning); }
+        .badge.expired { color: var(--danger); }
+        .badge.in-gym { color: var(--success); }
+        .badge.absent { color: var(--text-muted); }
+
+        .days-left {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Фитнес-Клуб «Нурлан Крутой»</h1>
+            <p>Модуль оперативного учета клиентов и абонементов</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat total">
+                <div class="num" id="statActive">0</div>
+                <div class="label">Активных абонементов</div>
+            </div>
+            <div class="stat in-gym">
+                <div class="num" id="statInGym">0</div>
+                <div class="label">Сейчас в зале</div>
+            </div>
+            <div class="stat absent">
+                <div class="num" id="statAbsent">0</div>
+                <div class="label">Нет на месте (абонемент активен)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Регистрация нового клиента</h2>
+            <div class="form-grid">
+                <input type="text" id="clientName" placeholder="ФИО клиента">
+                <input type="text" id="clientPhone" placeholder="Телефон (+7...)">
+                <select id="clientType">
+                    <option value="Месячный абонемент">Месячный абонемент</option>
+                    <option value="Безлимит на год">Безлимит на год</option>
+                    <option value="Разовое посещение">Разовое посещение</option>
+                </select>
+                <button onclick="addClient()">Добавить</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>База абонементов</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ФИО Клиента</th>
+                        <th>Телефон</th>
+                        <th>Тип абонемента</th>
+                        <th>Дата регистрации</th>
+                        <th>Действует до</th>
+                        <th>Статус</th>
+                        <th>Присутствие</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody id="clientTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const WARNING_DAYS = 7;
+        const MS_IN_DAY = 24 * 60 * 60 * 1000;
+
+        let clients = JSON.parse(localStorage.getItem('fitness_clients')) || [];
+
+        function toISO(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function fromISO(iso) {
+            const [y, m, d] = iso.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function formatDate(iso) {
+            return fromISO(iso).toLocaleDateString('ru-RU');
+        }
+
+        function addMonths(date, months) {
+            const result = new Date(date.getFullYear(), date.getMonth() + months, 1);
+            const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+            result.setDate(Math.min(date.getDate(), lastDay));
+            return result;
+        }
+
+        function calcEndDate(type, startDate) {
+            if (type === 'Месячный абонемент') return addMonths(startDate, 1);
+            if (type === 'Безлимит на год') return addMonths(startDate, 12);
+            return new Date(startDate);
+        }
+
+        function migrateOldRecords() {
+            let changed = false;
+            clients.forEach(client => {
+                if (!client.start) {
+                    const parts = (client.date || '').split('.');
+                    let start = new Date();
+                    if (parts.length === 3) {
+                        start = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+                    }
+                    client.start = toISO(start);
+                    client.end = toISO(calcEndDate(client.type, start));
+                    changed = true;
+                }
+                if (typeof client.inGym !== 'boolean') {
+                    client.inGym = false;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('fitness_clients', JSON.stringify(clients));
+            }
+        }
+
+        function getStatus(endISO) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const daysLeft = Math.round((fromISO(endISO) - today) / MS_IN_DAY);
+
+            if (daysLeft < 0) {
+                return { cls: 'expired', text: 'Истёк', note: `${Math.abs(daysLeft)} дн. назад`, isActive: false };
+            }
+            if (daysLeft === 0) {
+                return { cls: 'soon', text: 'Истекает сегодня', note: 'последний день', isActive: true };
+            }
+            if (daysLeft <= WARNING_DAYS) {
+                return { cls: 'soon', text: 'Скоро истекает', note: `осталось ${daysLeft} дн.`, isActive: true };
+            }
+            return { cls: 'active', text: 'Активен', note: `осталось ${daysLeft} дн.`, isActive: true };
+        }
+
+        function updateStats() {
+            let active = 0, inGym = 0, absent = 0;
+            clients.forEach(client => {
+                if (getStatus(client.end).isActive) {
+                    active++;
+                    if (client.inGym) inGym++;
+                    else absent++;
+                }
+            });
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statInGym').textContent = inGym;
+            document.getElementById('statAbsent').textContent = absent;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('clientTableBody');
+            tbody.innerHTML = '';
+
+            if (clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-row">Список клиентов пуст</td></tr>`;
+                updateStats();
+                return;
+            }
+
+            clients.forEach((client, index) => {
+                const status = getStatus(client.end);
+                const present = status.isActive && client.inGym;
+                const presenceBadge = present
+                    ? '<span class="badge in-gym">В зале</span>'
+                    : '<span class="badge absent">Нет на месте</span>';
+                const presenceBtn = present
+                    ? `<button class="btn-presence leave" onclick="togglePresence(${index})">Вышел</button>`
+                    : `<button class="btn-presence" onclick="togglePresence(${index})" ${status.isActive ? '' : 'disabled title="Абонемент истёк"'}>В зале</button>`;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${escapeHTML(client.name)}</td>
+                    <td>${escapeHTML(client.phone)}</td>
+                    <td>${escapeHTML(client.type)}</td>
+                    <td>${formatDate(client.start)}</td>
+                    <td>${formatDate(client.end)}</td>
+                    <td>
+                        <span class="badge ${status.cls}">${status.text}</span>
+                        <span class="days-left">${status.note}</span>
+                    </td>
+                    <td>${presenceBadge}</td>
+                    <td>
+                        <div class="actions">
+                            ${presenceBtn}
+                            <button class="btn-delete" onclick="deleteClient(${index})">Удалить</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateStats();
+        }
+
+        function togglePresence(index) {
+            const client = clients[index];
+            if (!getStatus(client.end).isActive) return;
+            client.inGym = !client.inGym;
+            saveAndRefresh();
+        }
+
+        function addClient() {
+            const nameInput = document.getElementById('clientName');
+            const phoneInput = document.getElementById('clientPhone');
+            const typeSelect = document.getElementById('clientType');
+
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const type = typeSelect.value;
+
+            if (!name || !phone) {
+                alert('Пожалуйста, заполните ФИО и телефон клиента!');
+                return;
+            }
+
+            const startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = calcEndDate(type, startDate);
+
+            clients.push({
+                name,
+                phone,
+                type,
+                start: toISO(startDate),
+                end: toISO(endDate),
+                inGym: false
+            });
+            saveAndRefresh();
+
+            nameInput.value = '';
+            phoneInput.value = '';
+        }
+
+        function deleteClient(index) {
+            if (confirm('Удалить запись?')) {
+                clients.splice(index, 1);
+                saveAndRefresh();
+            }
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('fitness_clients', JSON.stringify(clients));
+            renderTable();
+        }
+
+        function escapeHTML(str) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+            return str.replace(/[&<>'"]/g, tag => map[tag]);
+        }
+
+        migrateOldRecords();
+        renderTable();
+    </script>
+</body>
+</html>
